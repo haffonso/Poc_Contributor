@@ -1,0 +1,27 @@
+{
+	"@type":"Process",
+	"Name":"}WF_ResetWorkflow",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_ResetWorkflow.ti",
+	"UIData":"_ParameterConstraints=e30=\f",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"",
+			"Value":"Forecast",
+			"Type":"String"
+		},
+		{
+			"Name":"pResetComments",
+			"Prompt":"",
+			"Value":"N",
+			"Type":"String"
+		}
+	],
+	"Variables":[]
+}
