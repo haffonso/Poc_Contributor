@@ -1,5 +1,6 @@
 #region Prolog
 vWorkflowStateCube = '}WF_' | pWorkflow | '_State';
+vWorkflowStateCubeReview = '}WF_' | pWorkflow | '_State_Review';
 vWorkflowCommentCube = '}WF_' | pWorkflow | '_Comments';
 vWorkflowsDimension = '}WF';
 vApprovalDimension = CellGetS( '}WF_Control', pWorkflow, 'Dimension' );
@@ -60,5 +61,7 @@ END;
 DimensionElementDeleteDirect( vWorkflowsDimension, pWorkflow );
 CubeDestroy( vWorkflowStateCube );
 CubeDestroy( vWorkflowCommentCube );
+CubeDestroy( vWorkflowStateCubeReview );
+
 
 #endregion

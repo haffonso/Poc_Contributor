@@ -205,13 +205,13 @@ ENDIF;
 
 IF ( vSecurity @= 'Element' );
     HierarchyElementSecurityPut ( 'Write', vApprovalDimension, vApprovalDimension, pNode, vContributorGroup );
-    HierarchyElementSecurityPut ( 'Write', vApprovalDimension, vApprovalDimension, pNode, vReviewerGroup );
+    HierarchyElementSecurityPut ( 'Read', vApprovalDimension, vApprovalDimension, pNode, vReviewerGroup );
     vNodeIndex = 1;
     vNode = DIMNM ( vApprovalDimension, vNodeIndex );
     WHILE ( vNode @<> '' );
         IF ( ElementIsAncestor ( vApprovalDimension, vApprovalHierarchy, pNode, vNode ) = 1);
             HierarchyElementSecurityPut ( 'Write', vApprovalDimension, vApprovalDimension, vNode, vContributorGroup );
-            HierarchyElementSecurityPut ( 'Write', vApprovalDimension, vApprovalDimension, vNode, vReviewerGroup );
+            HierarchyElementSecurityPut ( 'Read', vApprovalDimension, vApprovalDimension, vNode, vReviewerGroup );
         ENDIF;
         vNodeIndex = vNodeIndex + 1;
         vNode = DIMNM ( vApprovalDimension, vNodeIndex );
