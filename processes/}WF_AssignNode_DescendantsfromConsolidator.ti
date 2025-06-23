@@ -1,0 +1,82 @@
+#region Prolog
+
+# DEFINIÇÃO DAS VARIAVEIS
+vNow           = TIMST (NOW(), '\Y-\m-\d \h:\i\:\s' );
+vWorkflowCubeNameReview = '}WF_' | pWorkflow | '_State_Review';
+vWorkflowCubeName = '}WF_' | pWorkflow | '_State';
+pNode = pConsolidator;
+vApprovalDimension = CellGetS( '}WF_Control', pWorkflow, 'Dimension' );
+vApprovalHierarchy = CellGetS( '}WF_Control', pWorkflow, 'Hierarchy' );
+vWorkflowGroupPrefix = CellGetS( '}WF_Control', pWorkflow, 'Group Prefix' );
+vSecurity = CellGetS( '}WF_Control', pWorkflow, 'Security' );
+
+# INSERE VALORES EM NIVEL CONSOLIDADO NO CUBO _STATE
+CellPutS( pContributor, vWorkflowCubeName, pNode, pContributor, 'Contributor' );
+CellPutS( pReviewer, vWorkflowCubeName, pNode, pContributor, 'Reviewer' );
+CellPutS( 'Assigned', vWorkflowCubeName, pNode, pContributor, 'State' );
+CellPutS( vNow, vWorkflowCubeName, pNode, pContributor, 'Last Update' );
+
+#INSERE VALORES EM NIVEL CONSOLIDADO NO CUBO _STATE_REVIEW
+CellPutS( pContributor, vWorkflowCubeNameReview, pNode, pReviewer, 'Contributor' );
+CellPutS( pReviewer, vWorkflowCubeNameReview, pNode, pReviewer, 'Reviewer' );
+CellPutS( 'Assigned', vWorkflowCubeNameReview, pNode, pReviewer, 'State' );
+CellPutS( vNow, vWorkflowCubeNameReview, pNode, pReviewer, 'Last Update' );
+
+
+# FAZ A CHECAGEM DOS DESCENDENTES DO ELEMENTO CONSOLIDADOR INSERINDO OS DEVIDOS RIGHTS
+vNodeIndex = 1;
+vNode = DIMNM ( vApprovalDimension, vNodeIndex );
+WHILE ( vNode @<> '' );
+   IF ( ElementIsComponent ( vApprovalDimension, vApprovalHierarchy, vNode, pNode ) = 1);
+      # INSERE VALORES EM CUBO _STATE
+      CellPutS( pContributor, vWorkflowCubeName, vNode, pContributor, 'Contributor' );
+      CellPutS( pReviewer, vWorkflowCubeName, vNode, pContributor, 'Reviewer' );
+      CellPutS( 'Assigned', vWorkflowCubeName, vNode, pContributor, 'State' );
+      CellPutS( vNow, vWorkflowCubeName, vNode, pContributor, 'Last Update' );
+      # INSERE VALORES EM CUBO _STATE_REVIEW
+      CellPutS( pContributor, vWorkflowCubeNameReview, vNode, pReviewer, 'Contributor' );
+      CellPutS( pReviewer, vWorkflowCubeNameReview, vNode, pReviewer, 'Reviewer' );
+      CellPutS( 'Assigned', vWorkflowCubeNameReview, vNode, pReviewer, 'State' );
+      CellPutS( vNow, vWorkflowCubeNameReview, vNode, pReviewer, 'Last Update' );
+   ENDIF;
+   vNodeIndex = vNodeIndex + 1;
+   VNode = DIMNM ( vApprovalDimension, vNodeIndex );
+END;
+
+vContributorGroup = pContributor;
+vReviewerGroup = pReviewer;
+
+
+#endregion
+#region Metadata
+ 
+#endregion
+#region Epilog
+
+# ACESSO EM CUBO }ElementSecurity
+#IF ( vSecurity @= 'Element' );
+    # INSERE ACESSO DE SEGURANÇA DE UM GRUPO A UM ELEMENTO CONSOLIDADOR EM }ElementSecurity
+    HierarchyElementSecurityPut ( 'Write', vApprovalDimension, vApprovalHierarchy, pNode, vContributorGroup );
+    HierarchyElementSecurityPut ( 'Read', vApprovalDimension, vApprovalHierarchy, pNode, vReviewerGroup );
+
+#   ElementSecurityPut( 'Write', vApprovalDimension, pNode, vContributorGroup );
+#   ElementSecurityPut ( 'Read', vApprovalDimension, pNode, vReviewerGroup );
+    # FAZ A CHECAGEM DOS DESCENDENTES DO ELEMENTO CONSOLIDADOR INSERINDO OS DEVIDOS RIGHTS
+    vNodeIndex = 1;
+    vNode = DIMNM ( vApprovalDimension, vNodeIndex );
+    WHILE ( vNode @<> '' );
+        IF ( ElementIsAncestor ( vApprovalDimension, vApprovalHierarchy, pNode, vNode ) = 1);
+            HierarchyElementSecurityPut ( 'Write', vApprovalDimension, vApprovalHierarchy, vNode, vContributorGroup );
+            HierarchyElementSecurityPut ( 'Read', vApprovalDimension, vApprovalHierarchy, vNode, vReviewerGroup );
+
+#            ElementSecurityPut( 'Write', vApprovalDimension, vNode, vContributorGroup );
+#            ElementSecurityPut ( 'Read', vApprovalDimension, vNode, vReviewerGroup );
+       ENDIF;
+        vNodeIndex = vNodeIndex + 1;
+        vNode = DIMNM ( vApprovalDimension, vNodeIndex );
+    END;
+#ENDIF;
+
+
+
+#endregion

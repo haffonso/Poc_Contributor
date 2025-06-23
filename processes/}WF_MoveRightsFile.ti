@@ -1,0 +1,37 @@
+#region Prolog
+
+pWorkflow = CellGetS( '}WF_Picklists', 'Workflow','value');
+vNomePermitido = 'Rights_Workflow.csv';
+pArquivo = vNomePermitido;
+
+IF( pFileOrigem @<> vNomePermitido);
+        ExecuteProcess( '}WF_LogError',
+                   'pWorkflow', pWorkflow,
+                   'pMessage', 'Nome do arquivo de Rights está errado. Precisa alterar o nome',
+                   'pError', 'Nome do arquivo de rights precisa ser Rights_Workflow.csv' );
+        ProcessQuit;
+ENDIF;
+
+
+# # ARQUIVO DEVE ESTAR NO CAMINHO ABAIXO
+pDestino = 'E:\Documentos_PoC\Seguranca\';
+
+
+# # CAMINHO ORIGEM
+vOrigem = 'E:\tm1models\PoC_Contribuicao_Exemplo\SDATA\model_upload\';
+
+
+# # CAMINHO DESTINO COMPLETO
+ vDestino = pDestino | '\' | pArquivo;
+
+#endregion
+#region Epilog
+
+# COPIA DO ARQUIVO
+ASCIIOUTPUT('checagem_upload_arquivo.txt', 'Copiando o arquivo ' | pArquivo | ' de ' | vOrigem | ' para ' | pDestino); 
+
+IF( FileExists( vOrigem ) = 1 );
+   ExecuteCommand(  'robocopy /move ' | vOrigem | ' ' | pDestino | ' ' | pArquivo | '', 0 );
+    ASCIIOUTPUT('checagem_upload_arquivo.txt', 'Copia do arquivo ' | pArquivo | ' realizada com sucesso '); 
+ENDIF;
+#endregion

@@ -1,0 +1,21 @@
+{
+	"@type":"Process",
+	"Name":"}WF_MoveRightsFile",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_MoveRightsFile.ti",
+	"UIData":"_ParameterConstraints=e30=\f",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pFileOrigem",
+			"Prompt":"Arquivo Origem",
+			"Value":"0",
+			"Type":"String"
+		}
+	],
+	"Variables":[]
+}

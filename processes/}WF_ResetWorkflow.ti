@@ -1,21 +1,24 @@
 #region Prolog
 vNow           = TIMST (NOW(), '\Y-\m-\d \h:\i\:\s' );
+vWorkflowErrors = '}WF_Errors';
 vWorkflowStateCubeName = '}WF_' | pWorkflow | '_State';
+vWorkflowStateCubeNameReview = '}WF_' | pWorkflow | '_State_Review'; 
 vWorkflowCommentCubeName = '}WF_' | pWorkflow | '_Comment';
-vApprovalDimension = CellGetS( '}WF_Control', vWorkflowStateCubeName, 'Dimension' );
-vApprovalHierarchy = CellGetS( '}WF_Control', vWorkflowStateCubeName, 'Hierarchy' );
-vApprovalSubset = CellGetS( '}WF_Control', vWorkflowStateCubeName, 'Subset' );
-vControlDimension = CellGetS( '}WF_Control', vWorkflowStateCubeName, 'Control Dimension' );
-vControlHierarchy =  CellGetS( '}WF_Control', vWorkflowStateCubeName, 'Control Hierarchy' );
-vControlMember =  CellGetS( '}WF_Control', vWorkflowStateCubeName, 'Control Member' );
-vSecurity = CellGetS( '}WF_Control', vWorkflowStateCubeName, 'Security' );
-vSecurityMode = CellGetS( '}WF_Control', vWorkflowStateCubeName, 'Security Mode' );
-vLocking = CellGetS( '}WF_Control', vWorkflowStateCubeName, 'Locking' );
+vApprovalDimension = CellGetS( '}WF_Control', pWorkflow, 'Dimension' );
+vApprovalHierarchy = CellGetS( '}WF_Control', pWorkflow, 'Hierarchy' );
+vApprovalSubset = CellGetS( '}WF_Control', pWorkflow, 'Subset' );
+vControlDimension = CellGetS( '}WF_Control', pWorkflow, 'Control Dimension' );
+vControlHierarchy =  CellGetS( '}WF_Control', pWorkflow, 'Control Hierarchy' );
+vControlMember =  CellGetS( '}WF_Control', pWorkflow, 'Control Member' );
+vSecurity = CellGetS( '}WF_Control', pWorkflow, 'Security' );
+vSecurityMode = CellGetS( '}WF_Control', pWorkflow, 'Security Mode' );
+vLocking = CellGetS( '}WF_Control', pWorkflow, 'Locking' );
 vWorkflowGroupPrefix = CellGetS( '}WF_Control', pWorkflow, 'Group Prefix' );
 
 
 IF ( pResetComments @= 'Y' );
     CubeClearData( vWorkflowCommentCubeName );
+    CubeClearData( '}WF_Picklists' );
 ENDIF;
 
 
@@ -40,6 +43,10 @@ ELSEIF ( vSecurityMode @= 'Group' );
     vMDX  = 'SELECT {TM1SUBSETALL([}WF_State])} ON 0, NON EMPTY {TM1SUBSETALL([' | vApprovalDimension | '].[' | vApprovalHierarchy |'])}*{TM1SUBSETALL([}Groups].[}Groups])} ON 1 FROM [' | vWorkflowStateCubeName | ']';
     ViewCreateByMDX( vWorkflowStateCubeName, vView, vMDX, 1 );
     ViewZeroOut( vWorkflowStateCubeName, vView );
+    vView = '_ClearViewReview';
+    vMDX  = 'SELECT {TM1SUBSETALL([}WF_State])} ON 0, NON EMPTY {TM1SUBSETALL([' | vApprovalDimension | '].[' | vApprovalHierarchy |'])}*{TM1SUBSETALL([}Groups].[}Groups])} ON 1 FROM [' | vWorkflowStateCubeNameReview | ']';
+    ViewCreateByMDX( vWorkflowStateCubeNameReview, vView, vMDX, 1 );
+    ViewZeroOut( vWorkflowStateCubeNameReview, vView );    
 ELSE;
     # LOG ERROR
 ENDIF;
@@ -68,13 +75,14 @@ ELSEIF ( vSecurity @= 'Element' );
     ENDIF;
 ENDIF;
 
-
+CubeClearData( vWorkflowErrors );
 
 ExecuteProcess( '}WF_LockUnlockWorkflow',
                'pWorkflow', pWorkflow,
-               'pLock', 0 );
+               'pLock', 1 );
 
 
-
+# Aplicando Security Refresh
+SecurityRefresh;
 
 #endregion

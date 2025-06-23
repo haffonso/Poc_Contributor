@@ -12,26 +12,14 @@
 	[
 		{
 			"Name":"pWorkflow",
-			"Prompt":"Name of workflow",
-			"Value":"Budget",
+			"Prompt":"Nome do WOrkflow",
+			"Value":"",
 			"Type":"String"
 		},
 		{
-			"Name":"pContributor",
-			"Prompt":"User or group to assign as contributor",
-			"Value":"NA Contributors",
-			"Type":"String"
-		},
-		{
-			"Name":"pReviewer",
-			"Prompt":"(Optional) User or group to assign as reviewer",
-			"Value":"Reviewers",
-			"Type":"String"
-		},
-		{
-			"Name":"pNode",
-			"Prompt":"Node in approval dimension ",
-			"Value":"North America",
+			"Name":"pCheck",
+			"Prompt":"Deseja desatribuir o nó aos grupos configurados?",
+			"Value":"S",
 			"Type":"String"
 		}
 	],

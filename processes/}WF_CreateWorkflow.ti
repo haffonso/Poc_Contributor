@@ -10,13 +10,13 @@ vWorkflowComments = '}WF_Comments';
 vWorkflowCommentLines = '}WF_Comment_Lines';
 vWorkflowCommentCubeName = '}WF_' | pWorkflow | '_Comments';
 
-
+pDebug = 'Y';
 pDimension = CellGetS( '}WF_Picklists', 'Approval Dimension','value');
 pHierarchy = CellGetS( '}WF_Picklists', 'Approval Hierarchy','value');
 pSubset = CellGetS( '}WF_Picklists', 'Approval Subset','value');
 pCubes = CellGetS( '}WF_Picklists', 'Input Cube','value');
 pSecurity = CellGetS( '}WF_Picklists', 'Security','value');
-pSecutiryMode = CellGetS( '}WF_Picklists', 'Security Mode','value');
+pSecurityMode = CellGetS( '}WF_Picklists', 'Security Mode','value');
 pLocking = CellGetS( '}WF_Picklists', 'Locking','value');
 pControlDimension = CellGetS( '}WF_Picklists', 'Control Dimension','value');
 pControlHierarchy = CellGetS( '}WF_Picklists', 'Approval Dimension','value');

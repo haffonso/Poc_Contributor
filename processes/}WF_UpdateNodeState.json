@@ -39,12 +39,6 @@
 			"Prompt":"Available,Open,Submitted,Approved,Rejected",
 			"Value":"ready for entry",
 			"Type":"String"
-		},
-		{
-			"Name":"pGroup",
-			"Prompt":"Group to update state for (only when using group mode)",
-			"Value":"",
-			"Type":"String"
 		}
 	],
 	"Variables":[]

@@ -101,7 +101,7 @@ DimensionElementInsertDirect( vWorkflowErrors, '', 'Message', 'S' );
 DimensionElementInsertDirect( vWorkflowErrors, '', 'DateTime', 'S' );
 DimensionElementInsertDirect( vWorkflowErrors, '', 'User', 'S' );
 
-CubeCreate( vWorkflowErrors, vWorkflowErrorLines, vWorkflowErrors );
+CubeCreate( vWorkflowErrors, '}Clients', vWorkflowErrorLines, vWorkflowErrors );
 
 IF ( DimensionExists( vWorkflowCommentLines ) = 1 );
     DimensionDestroy( vWorkflowCommentLines );

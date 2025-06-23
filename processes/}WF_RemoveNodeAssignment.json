@@ -12,20 +12,20 @@
 	[
 		{
 			"Name":"pWorkflow",
-			"Prompt":"Name of workflow to update",
-			"Value":"Budget",
+			"Prompt":"Nome do Workflow",
+			"Value":"FCO.010",
 			"Type":"String"
 		},
 		{
-			"Name":"pContributor",
-			"Prompt":"User or group to remove",
-			"Value":"NA Contributors",
+			"Name":"pCheck",
+			"Prompt":"Deseja desatribuir o nó aos grupos configurados?",
+			"Value":"N",
 			"Type":"String"
 		},
 		{
 			"Name":"pNode",
-			"Prompt":"Node in approval dimension ",
-			"Value":"North America",
+			"Prompt":"Usado somente para limpeza massiva",
+			"Value":"",
 			"Type":"String"
 		}
 	],

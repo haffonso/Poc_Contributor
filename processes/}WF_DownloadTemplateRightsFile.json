@@ -1,0 +1,13 @@
+{
+	"@type":"Process",
+	"Name":"}WF_DownloadTemplateRightsFile",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_DownloadTemplateRightsFile.ti",
+	"UIData":"_ParameterConstraints=e30=\f",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":[],
+	"Variables":[]
+}

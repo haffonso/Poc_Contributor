@@ -1,0 +1,224 @@
+#region Prolog
+
+IF( pCheckExecution @<> 'S');
+     ExecuteProcess( '}WF_LogError',
+        'pWorkflow', pWorkflow,
+        'pMessage', 'Execução do processo de atribuição de nó teve parametro diferente de S ao iniciar.',
+        'pError', 'Execução interrompida. Parametro de execução incorreta' );
+    ProcessQuit;
+ENDIF;
+
+vNow = TIMST (NOW(), '\Y-\m-\d \h:\i\:\s' );
+cHorarioInicio = Now();
+vWorkflowCubeNameReview = '}WF_' | pWorkflow | '_State_Review';
+vWorkflowCubeName = '}WF_' | pWorkflow | '_State';
+vApprovalDimension = CellGetS( '}WF_Control', pWorkflow, 'Dimension' );
+vApprovalHierarchy = CellGetS( '}WF_Control', pWorkflow, 'Hierarchy' ); 
+vApprovalSubset = CellGetS( '}WF_Control', pWorkflow, 'Subset' );
+vSecurity = CellGetS( '}WF_Control', pWorkflow, 'Security' );
+vSecurityMode = CellGetS( '}WF_Control', pWorkflow, 'Security Mode' );
+vLocking = CellGetS( '}WF_Control', pWorkflow, 'Locking' );
+vControlDimension  = CellGetS( '}WF_Control', pWorkflow, 'Control Dimension' );
+vControlHierarchy = CellGetS( '}WF_Control', pWorkflow, 'Control Hierarchy' );
+vControlMember  = CellGetS( '}WF_Control', pWorkflow, 'Control Member' );
+vWorkflowGroupPrefix = CellGetS( '}WF_Control', pWorkflow, 'Group Prefix' );
+DatasourceASCIIQuoteCharacter='';
+cNomeArquivoFonteCompleto 	= 'model_upload/' | pFileName;
+
+
+# Informações do cubo de Destino
+# ========================================
+cCuboDestino_State		= vWorkflowCubeName;
+cCuboDestino_State_Review		= vWorkflowCubeNameReview;
+
+
+# ========================================
+# VERIFICA SE CUBOS DE ESTADOS EXISTEM 
+# ========================================
+IF( CubeExists( vWorkflowCubeName) = 0 % CubeExists( vWorkflowCubeNameReview ) = 0);
+       ExecuteProcess( '}WF_LogError',
+          'pWorkflow', pWorkflow,
+          'pMessage', 'Os cubos de estados não existem para o Workflow escolhido no parametro de execução do processo.',
+          'pError', 'Cubos de estados do Workflow escolhido não existe.' );
+        ProcessQuit;
+ENDIF;
+
+
+
+# Aborta o processo se o arquivo fonte não existir na pasta de origem
+# ======================================================
+IF( FileExists( cNomeArquivoFonteCompleto ) = 0 );
+         ExecuteProcess( '}WF_LogError',
+                   'pWorkflow', pWorkflow,
+                   'pMessage', 'Arquivo de carga não está no local correto. Por favor insira o arquivo de rights no caminho E:\Documentos_PoC\Rights_Workflow.csv.',
+                   'pError', 'Arquivo de carga RIGHTS não existente' );
+        ProcessQuit;
+ENDIF;
+
+# ======================================================
+# Define o arquivo fonte como a nova fonte de dados deste processo
+# ======================================================
+DatasourceNameForServer		= cNomeArquivoFonteCompleto ;
+DatasourceNameForClient		= cNomeArquivoFonteCompleto ;
+
+# =================================================================================
+# Definição View de Limpeza dos Cubos Destino
+# =================================================================================
+cSuprimirConsolidado	= 'N';
+cSuprimirZero		= 'N'; 
+cSuprimirCamposCalculados	= 'S';
+cViewTemporaria	 	= 'S';
+nViewTemporaria		= If( cViewTemporaria @= 'S', 1, 0);
+
+# =================================================================================
+# Define nome da view e subset de limpeza
+# ======================================================
+# cViewDestino	= 'processo.' | vSecurityMode | '.' | 'Limpeza' | '.' | vNow; 
+cViewDestino	= 'processo.' | pWorkflow | '.' | 'Limpeza' | '.' | TimSt( cHorarioInicio, '\Y-\m-\d \hh\im\ss' ); 
+cSubsetDestino	= cViewDestino;
+
+# ======================================================
+# Cria a view que será utilizada para a limpeza
+# ======================================================
+ViewCreate( cCuboDestino_State , cViewDestino , nViewTemporaria );
+ViewCreate( cCuboDestino_State_Review , cViewDestino , nViewTemporaria );
+
+# ======================================================
+# Configuração da View
+# ======================================================
+ViewExtractSkipCalcsSet( cCuboDestino_State, cViewDestino, If( cSuprimirConsolidado @= 'S', 1, 0) );
+ViewExtractSkipCalcsSet( cCuboDestino_State_Review, cViewDestino, If( cSuprimirConsolidado @= 'S', 1, 0) );
+ViewExtractSkipZeroesSet( cCuboDestino_State, cViewDestino, If( cSuprimirZero @= 'S', 1, 0)  );
+ViewExtractSkipZeroesSet( cCuboDestino_State_Review, cViewDestino, If( cSuprimirZero @= 'S', 1, 0)  );
+ViewExtractSkipRuleValuesSet(cCuboDestino_State, cViewDestino, If( cSuprimirCamposCalculados @= 'S', 1, 0) );
+ViewExtractSkipRuleValuesSet( cCuboDestino_State_Review, cViewDestino, If( cSuprimirCamposCalculados @= 'S', 1, 0) );
+
+# ======================================================
+# Apaga os valores da View criada
+# ======================================================
+ViewZeroOut(  cCuboDestino_State , cViewDestino );
+ViewZeroOut(  cCuboDestino_State_Review , cViewDestino );
+
+
+
+
+#endregion
+#region Data
+pNode = pNode_File;
+pContributor = pContributor_File;
+pReviewer = pReviewer_File;
+
+
+IF( vSecurityMode @<> 'Group' ) ;
+     ExecuteProcess( '}WF_LogError',
+                   'pWorkflow', pWorkflow,
+                   'pMessage', 'Modo de segurança "' | vSecurityMode | '" incorreto. Worflow utiliza mode de segurança em Grupo.',
+                   'pError', 'O modo de segurança para este Workflow não esta configurado para  Group. Alterar em cubo }WF_Control' );
+     ProcessQuit;
+
+ELSEIF( DimensionElementExists( '}Groups', pContributor ) <> 1 % DimensionElementExists( '}Groups', pReviewer ) <> 1 ) ;
+     ExecuteProcess( '}WF_LogError',
+                   'pWorkflow', pWorkflow,
+                   'pMessage', 'Verifique os grupos de Contribuidor "' | pContributor | '" e Revisor "' | pReviewer | '" no arquivo de carga.',
+                   'pError', 'Grupo Contribuidor ou Revisor nas colunas GRUPO_CONTRIBUIÇÃO ou GRUPO_REVISOR do arquivo de carga não existe na dimensão }Groups' );
+     ProcessQuit;
+
+# ELSEIF( ElementIsComponent ( vApprovalDimension, vApprovalHierarchy, pNode, vControlDimension ) <> 1 ) ;
+#      ExecuteProcess( '}WF_LogError',
+#                    'pWorkflow', pWorkflow,
+#                    'pMessage', 'O Elemento ou Consolidador "' | pNode | '" não pertence a dimensão de colaboração "' | vApprovalDimension | '" .',
+#                    'pError', 'O Elemento ou Consolidador na coluna ITEM do arquivo de carga precisa ser corrigido' );
+#      ProcessQuit;  
+
+ELSEIF( DIMIX(vApprovalDimension, pNode) = 0);
+     ExecuteProcess( '}WF_LogError',
+                   'pWorkflow', pWorkflow,
+                   'pMessage', 'O Elemento "' | pNode | '" não pertence a dimensão de colaboração "' | vApprovalDimension | '" .',
+                   'pError', 'O Elemento na coluna ITEM do arquivo de carga precisa ser corrigido' );
+      ProcessQuit; 
+
+    
+# IDENTIFICA ELEMENTO CONSOLIDADOR E RODA PROCESSO PARA ATRIBUIR AOS ELEMENTOS FILHOS A SEGURANÇA
+# PARA CUBOS "_STATE" E "_STATE_REVIEW" E "}ElementSecurity"
+ELSEIF( DTYPE( vApprovalDimension, pNode ) @= 'C' );
+    ExecuteProcess( '}WF_AssignNode_DescendantsfromConsolidator', 'pWorkflow', pWorkflow, 'pContributor', pContributor, 'pReviewer', pReviewer, 'pConsolidator', pNode );
+
+    
+ELSE;
+    # INSERÇÃO EM CUBO STATE 
+     CellPutS( pContributor, vWorkflowCubeName, pNode, pContributor, 'Contributor' );
+     CellPutS( pReviewer, vWorkflowCubeName, pNode, pContributor, 'Reviewer' );
+     CellPutS( 'Assigned', vWorkflowCubeName, pNode, pContributor, 'State' );
+     CellPutS( vNow, vWorkflowCubeName, pNode, pContributor, 'Last Update' );
+     # INSERÇÃO EM CUBO STATE_REVIEW
+     CellPutS( pContributor, vWorkflowCubeNameReview, pNode, pReviewer, 'Contributor' );
+     CellPutS( pReviewer, vWorkflowCubeNameReview, pNode, pReviewer, 'Reviewer' );
+     CellPutS( 'Assigned', vWorkflowCubeNameReview, pNode, pReviewer, 'State' );
+     CellPutS( vNow, vWorkflowCubeNameReview, pNode, pReviewer, 'Last Update' );
+
+     HierarchyElementSecurityPut ( 'Write', vApprovalDimension, vApprovalDimension, pNode, pContributor );
+     HierarchyElementSecurityPut ( 'Read', vApprovalDimension, vApprovalDimension, pNode, pReviewer );
+
+#       ElementSecurityPut( 'Write', vApprovalDimension, pNode, pContributor );
+#       ElementSecurityPut ( 'Read', vApprovalDimension, pNode, pReviewer );
+    
+ENDIF;
+
+IF ( vApprovalDimension @<> vApprovalHierarchy );
+        CellPutS( 'Write', '}DimensionSecurity', vApprovalDimension | ':' | vApprovalHierarchy, pContributor );
+        CellPutS( 'Read', '}DimensionSecurity', vApprovalDimension | ':' | vApprovalHierarchy, pReviewer );
+ELSE;
+        CellPutS( 'Write', '}DimensionSecurity', vApprovalDimension, pContributor );
+        CellPutS( 'Read', '}DimensionSecurity', vApprovalDimension, pReviewer);
+ENDIF;
+
+#IF ( vSecurity @= 'Element' );
+#      HierarchyElementSecurityPut ( 'Write', vApprovalDimension, vApprovalDimension, pNode, pContributor );
+#      HierarchyElementSecurityPut ( 'Read', vApprovalDimension, vApprovalDimension, pNode, pReviewer );
+#ENDIF;
+
+  
+
+
+
+        
+#endregion
+#region Epilog
+
+IF ( vSecurity @= 'Element');
+    vCubeIndex = 1;
+    vCube = DIMNM( '}Cubes', vCubeIndex );
+    WHILE ( vCube @<> '');
+        IF ( CELLGETN ( '}WF_Cubes', vCube, pWorkflow ) = 1);
+            CellPutS( 'Write', '}CubeSecurity', vCube, pContributor );
+            IF ( pReviewer @<> '' );
+               CellPutS( 'Read', '}CubeSecurity', vCube, pReviewer );             
+            ENDIF;
+               IF ( CubeExists( '}DimensionSecurity' ) = 1);
+                vCubeDimensionIndex = 1;
+                vCubeDimension = TABDIM( vCube, vCubeDimensionIndex );
+                WHILE ( vCubeDimension @<> '' );
+                    vCurrentContributorDimensionSecurityLevel = CellGetS( '}DimensionSecurity', vCubeDimension, pContributor );
+                    IF ( vCurrentContributorDimensionSecurityLevel @= '' );
+                        CellPutS( 'Read', '}DimensionSecurity', vCubeDimension, pContributor );
+                    ENDIF;
+                    vCurrentReviewerDimensionSecurityLevel = CellGetS( '}DimensionSecurity', vCubeDimension, pReviewer );
+                     IF ( vCurrentReviewerDimensionSecurityLevel @= '' & pReviewer @<> '' );
+                        CellPutS( 'Read', '}DimensionSecurity', vCubeDimension, pReviewer );
+                    ENDIF;
+                    vCubeDimensionIndex = vCubeDimensionIndex + 1;
+                    vCubeDimension = TABDIM( vCube, vCubeDimensionIndex );
+                END;
+            ENDIF;
+        ENDIF;
+        vCubeIndex = vCubeIndex + 1;
+        vCube = DIMNM( '}Cubes', vCubeIndex );
+ END;
+ENDIF;
+
+
+# Aplicando Security Refresh
+SecurityRefresh;
+
+            
+#endregion

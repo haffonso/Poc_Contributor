@@ -1,0 +1,35 @@
+#region Prolog
+
+
+ vArquivo = 'rights_model.csv';
+ vCaminhoOrigem = 'E:\Documentos_PoC\Modelo_Rights\';
+# #vCaminhoDestino = '%userprofile%\downloads\';
+ vCaminhoDestino = 'C:\Download_Rights_Exemplo\';
+ sCommand1 = 'cmd /c "md ' | vCaminhoDestino | '"';
+
+IF( FileExists( vCaminhoDestino ) = 0);
+    ExecuteCommand ( sCommand1, 1 );
+ENDIF;
+
+ vOrigem = vCaminhoOrigem | vArquivo;
+
+ vComando = 'xcopy "' | vOrigem | '" "' | vCaminhoDestino | '" /Y';
+# vComando = 'cmd.exe /c E:\Documentos_PoC\Processo_Download.bat';
+# #vComando =  'robocopy /mov ' | vCaminhoOrigem | ' ' | vCaminhoDestino | ' ' | vArquivo |  '';
+
+#vComando = 'C:\TEMP\testeelton.bat';
+
+ IF( FileExists(  vOrigem ) = 1);
+# #        ExecuteCommand( 'cmd.exe /c xcopy' | vOrigem | ' ' | vCaminhoDestino | ' /Y /I', 0 );
+          ASCIIOutput( 'log_comando.txt', 'Executando:  ' | vComando );
+          ExecuteCommand( vComando,  0 );
+
+# #        ASCIIOutput( 'check_download.txt', 'xcopy ' | vOrigem | ' ' | vCaminhoDestino | ' ' );
+# #       ASCIIOutput( 'chacegem_download_rights_template.txt', 'ARQUIVO EXEMPLO DE RIGHTS DISPONIBILIZADO NA PASTA DOWNLOADS');
+# #ELSE;
+# #       ASCIIOutput( 'chacegem_download_rights_template,txt', 'ARQUIVO EXEMPLO DE RIGHTS NÃO ENCONTRADO EM: ' | vOrigem );
+# #       ProcessError();
+ ENDIF;
+
+#ExecuteCommand('cmd.exe /c echo Hello > C:\TM1\log_teste.txt', 0);
+#endregion

@@ -15,6 +15,7 @@ vControlHierarchy = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Hierarch
 vControlMember = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Member' );
 
 vElementChildCount = ElementComponentCount ( vApprovalDimension, vApprovalHierarchy, pNode );
+LogOutput( 'INFO', NumberToString( vElementChildCount ) );
 
 vValidControl = 0;
 IF ( DimensionExists( vControlDimension ) = 1);
@@ -29,6 +30,7 @@ ENDIF;
 vFoundContributorWithDifferentState = 0;
 vContributorIndex = 1;
 vContributorUser = DIMNM( vWorkflowCubeName, vContributorIndex );
+LogOutput( 'INFO',  vContributorUser  );
 WHILE ( vContributorUser @<> '' );
     vIsContributor = CellGetS( vWorkflowCubeName, pNode, vContributorUser, 'Contributor' );
      vContributorLockState = StringToNumber ( CellGetS ( vWorkflowCubeName, pNode, vContributorUser, 'Lock' ) );
@@ -46,6 +48,8 @@ ENDIF;
 vCubeIndex = 1;
 vCube = DIMNM( '}Cubes', vCubeIndex );
 WHILE ( vCube @<> '');
+    #LogOutput( 'INFO', vCube );
+
     IF ( CELLGETN ( vWorkflowCubesCube, vCube, pWorkflow ) = 1);
         # Set order of parameter values for the SecurityOverlayGlobalLockCell TI function to match the dimension order in the cube
             vOverlayMap = '';
@@ -67,11 +71,16 @@ WHILE ( vCube @<> '');
                 vCubeDimOrder = TABDIM(vCube, vCubeDimOrderIndex );
             END;
             SecurityOverlayGlobalLockNode ( pLock, vCube, vOverlayMap ); 
+            LogOutput( 'INFO', vOverlayMap | vCube);
+
+
         IF ( vElementChildCount > 0);
             vElementIndex = 1;        
             vDimensionElement = DIMNM( vApprovalDimension, vElementIndex );
+            LogOutput( 'INFO', vDimensionElement );
+
             WHILE ( vDimensionElement @<> '' );
-                IF ( ElementIsComponent ( vApprovalDimension, vApprovalHierarchy, vDimensionElement, pNode )  = 1);
+                    IF ( ElementIsComponent ( vApprovalDimension, vApprovalHierarchy, vDimensionElement, pNode )  = 1);
                     IF ( vLocking @= 'Any' );
                         vOverlayMap = '';
                         vCubeDimOrderIndex = 1;

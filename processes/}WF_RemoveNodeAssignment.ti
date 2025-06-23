@@ -1,11 +1,19 @@
 #region Prolog
 vNow           = TIMST (NOW(), '\Y-\m-\d \h:\i:\s' );
 vUser = TM1User();
+pWorkflow = CellGetS( '}WF_Picklists', 'Workflow','value');
 
 vWorkflowCubeName = '}WF_' | pWorkflow | '_State';
+vWorkflowCubeNameReview = '}WF_' | pWorkflow | '_State_Review';
 vWorkflowControlCube = '}WF_Control';
 vWorkflowCubesCube = '}WF_Cubes';
 vWorkflowGroupPrefix = CellGetS( '}WF_Control', pWorkflow, 'Group Prefix' );
+
+IF(pNode @= '');
+  pNode = CellGetS( '}WF_Picklists', 'Approval Structure','value');
+ENDIF;    
+pContributor = CellGetS( '}WF_Picklists', 'Contributor Group','value');
+pReviewer = CellGetS( '}WF_Picklists', 'Reviewer Group','value');
 
 vApprovalDimension = CellGetS( vWorkflowControlCube, pWorkflow, 'Dimension' );
 vApprovalHierarchy = CellGetS( vWorkflowControlCube, pWorkflow, 'Hierarchy' );
@@ -17,6 +25,8 @@ vControlDimension = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Dimensio
 vControlHierarchy = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Hierarchy' );
 vControlMember = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Member' );
 vReviewerGroup = CellGetS( vWorkflowCubeName, pNode, pContributor, 'Reviewer' );
+
+
 
 DatasourceASCIIQuoteCharacter='';
 
@@ -33,6 +43,12 @@ CellPutS( '', vWorkflowCubeName, pNode, pContributor, 'State' );
 CellPutS( '', vWorkflowCubeName, pNode, pContributor, 'Last Update' );
 CellPutS( '', vWorkflowCubeName, pNode, pContributor, 'Lock' );
 
+CellPutS( '', vWorkflowCubeNameReview, pNode, vReviewerGroup, 'Contributor' );
+CellPutS( '', vWorkflowCubeNameReview, pNode, vReviewerGroup, 'Reviewer' );
+CellPutS( '', vWorkflowCubeNameReview, pNode, vReviewerGroup, 'State' );
+CellPutS( '', vWorkflowCubeNameReview, pNode, vReviewerGroup, 'Last Update' );
+CellPutS( '', vWorkflowCubeNameReview, pNode, vReviewerGroup, 'Lock' );
+
 vApprovalElementIndex = 1;
 vApprovalElement = DIMNM( vApprovalDimension, vApprovalElementIndex );
 WHILE ( vApprovalElement @<> '' );
@@ -42,6 +58,11 @@ WHILE ( vApprovalElement @<> '' );
         CellPutS( '', vWorkflowCubeName, vApprovalElement, pContributor, 'State' );
         CellPutS( '', vWorkflowCubeName, vApprovalElement, pContributor, 'Last Update' );
         CellPutS( '', vWorkflowCubeName, vApprovalElement, pContributor, 'Lock' );
+        CellPutS( '', vWorkflowCubeNameReview, vApprovalElement, vReviewerGroup, 'Contributor' );
+        CellPutS( '', vWorkflowCubeNameReview, vApprovalElement, vReviewerGroup, 'Reviewer' );
+        CellPutS( '', vWorkflowCubeNameReview, vApprovalElement, vReviewerGroup, 'State' );
+        CellPutS( '', vWorkflowCubeNameReview, vApprovalElement, vReviewerGroup, 'Last Update' );
+        CellPutS( '', vWorkflowCubeNameReview, vApprovalElement, vReviewerGroup, 'Lock' );        
     ENDIF;
     vApprovalElementIndex = vApprovalElementIndex + 1;
     vApprovalElement = DIMNM( vApprovalDimension, vApprovalElementIndex );
@@ -114,7 +135,7 @@ ENDIF;
 #endregion
 #region Epilog
 
-IF ( vSecurityMode @= 'Group' );
+IF ( vSecurityMode @= 'Group' ); 
     IF ( vSecurity @= 'Element' );
         HierarchyElementSecurityPut ( 'None', vApprovalDimension, vApprovalHierarchy, pNode, pContributor );
         IF ( vReviewerGroup @<> '' );
@@ -150,4 +171,10 @@ vGroupName = vWorkflowGroupPrefix | pWorkflow | '_' | pNode;
 IF ( DimensionElementExists( '}Groups',vGroupName ) = 1 & vSecurityMode @= 'Client' );
     RemoveClientFromGroup( pContributor, vGroupName );
 ENDIF;
+
+ExecuteProcess( '}WF_LockUnlockNode', 'pWorkflow', pWorkflow, 'pNode', pNode, 'pLock', 1  );
+
+# Aplicando Security Refresh
+SecurityRefresh;
+
 #endregion

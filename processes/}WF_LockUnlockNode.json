@@ -1,7 +1,7 @@
 {
 	"@type":"Process",
 	"Name":"}WF_LockUnlockNode",
-	"HasSecurityAccess":false,
+	"HasSecurityAccess":true,
 	"Code@Code.link":"}WF_LockUnlockNode.ti",
 	"UIData":"_ParameterConstraints=e30=\f",
 	"DataSource":
@@ -12,20 +12,20 @@
 	[
 		{
 			"Name":"pWorkflow",
-			"Prompt":"",
-			"Value":"Forecast",
+			"Prompt":"Nome do Workflow",
+			"Value":"FCO.010",
 			"Type":"String"
 		},
 		{
 			"Name":"pNode",
 			"Prompt":"",
-			"Value":"North America",
+			"Value":"",
 			"Type":"String"
 		},
 		{
 			"Name":"pLock",
 			"Prompt":"",
-			"Value":1,
+			"Value":0,
 			"Type":"Numeric"
 		}
 	],

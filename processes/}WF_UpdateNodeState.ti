@@ -2,6 +2,7 @@
 vNow           = TIMST (NOW(), '\Y-\m-\d \h:\i:\s' );
 vUser = TM1User();
 vWorkflowCubeName = '}WF_' | pWorkflow | '_state';
+vWorkflowCubeNameReview = '}WF_' | pWorkflow | '_state_Review';
 vWorkflowControlCube = '}WF_Control';
 vWorkflowCubesCube = '}WF_Cubes';
 
@@ -17,6 +18,64 @@ vControlHierarchy = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Hierarch
 vControlMember = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Member' );
 
 vElementChildCount = ElementComponentCount ( vApprovalDimension, vApprovalHierarchy, pNode );
+
+    vGroupIndex = 1;
+    vGroup = DIMNM ( '}Groups', 1 );
+
+    WHILE ( vGroup @<> '');
+        vContributor = CellGetS( vWorkflowCubeName, pNode, vGroup,'Contributor');
+            IF(vContributor @<> '');
+                pGroup = vContributor;
+            ENDIF;
+        vGroupIndex = vGroupIndex + 1;
+        vGroup = DIMNM ( '}Groups', vGroupIndex );
+    END; 
+
+vState = CellGetS( vWorkflowCubeName, pNode, pGroup,'State');
+vReviewer = CellGetS( vWorkflowCubeName, pNode, pGroup,'Reviewer');
+
+
+IF(pState @= 'Submitted' );
+IF(vState @= 'Assigned' % vState @= 'Rejected');  
+    ExecuteProcess( '}WF_LogError',
+      'pWorkflow', pWorkflow,
+      'pMessage', 'Node "' | pNode | '" needs to be open for contribution ',
+      'pError', 'Failed to open node' );
+       ProcessQuit;   
+ENDIF;    
+ENDIF;
+
+
+IF(pState @= 'Approved' % pState @= 'Rejected' );
+IF(vState @= 'Open');  
+    ExecuteProcess( '}WF_LogError',
+      'pWorkflow', pWorkflow,
+      'pMessage', 'Node "' | pNode | '" is in "Open" status, wait for the node to be submitted ',
+      'pError', 'Failed to open node' );
+       ProcessQuit;   
+ENDIF;    
+ENDIF;
+
+
+IF(pState @<> 'Approved' & pState @<> 'Rejected' );
+IF(vState @= 'Submitted' % vState @= 'Approved');   
+    ExecuteProcess( '}WF_LogError',
+      'pWorkflow', pWorkflow,
+      'pMessage', 'Node "' | pNode | '" has the status Submitted or Approved   ',
+      'pError', 'Failed to open node' );
+       ProcessQuit;   
+ENDIF;    
+ENDIF;
+IF(pState @= vState);   
+    ExecuteProcess( '}WF_LogError',
+      'pWorkflow', pWorkflow,
+      'pMessage', 'Node "' | pNode | '" has the status  ' | pState ,
+      'pError', 'Failed to approve node' );
+       ProcessQuit;   
+ENDIF;
+
+
+
 
 vValidControl = 0;
 IF ( DimensionExists( vControlDimension ) = 1);
@@ -35,6 +94,9 @@ ELSEIF ( vSecurityMode @= 'Group' );
     CellPutS ( pState, vWorkflowCubeName, pNode, pGroup, 'State' );  
     CellPutS ( vNow, vWorkflowCubeName, pNode, pGroup, 'Last Update' );  
     CellPutS ( NumberToString ( pLock ), vWorkflowCubeName, pNode, pGroup, 'Lock' );
+    CellPutS ( pState, vWorkflowCubeNameReview, pNode, vReviewer, 'State' );  
+    CellPutS ( vNow, vWorkflowCubeNameReview, pNode, vReviewer, 'Last Update' );  
+    CellPutS ( NumberToString ( pLock ), vWorkflowCubeNameReview, pNode, vReviewer, 'Lock' );    
 ENDIF;
 
 
@@ -50,7 +112,10 @@ IF ( vElementChildCount > 0);
             ELSEIF ( vSecurityMode @= 'Group' );
                 CellPutS ( NumberToString ( pLock ), vWorkflowCubeName, vDimensionElement, pGroup, 'Lock' );
                 CellPutS ( pState, vWorkflowCubeName, vDimensionElement, pGroup, 'State' );  
-                CellPutS ( vNow, vWorkflowCubeName, vDimensionElement, pGroup, 'Last Update' );  
+                CellPutS ( vNow, vWorkflowCubeName, vDimensionElement, pGroup, 'Last Update' );
+                CellPutS ( NumberToString ( pLock ), vWorkflowCubeNameReview, vDimensionElement, vReviewer, 'Lock' );
+                CellPutS ( pState, vWorkflowCubeNameReview, vDimensionElement, vReviewer, 'State' );  
+                CellPutS ( vNow, vWorkflowCubeNameReview, vDimensionElement, vReviewer, 'Last Update' );                  
             ENDIF;
         ENDIF;
         vElementIndex = vElementIndex + 1;       

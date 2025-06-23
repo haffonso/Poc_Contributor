@@ -9,6 +9,7 @@ vApprovalDimension = CellGetS( vWorkflowControlCube, pWorkflow, 'Dimension' );
 vApprovalHierarchy = CellGetS( vWorkflowControlCube, pWorkflow, 'Hierarchy' );
 vApprovalSubset = CellGetS( vWorkflowControlCube, pWorkflow, 'Subset' );
 vSecurity = CellGetS( vWorkflowControlCube, pWorkflow, 'Security' );
+vSecurityMode = CellGetS( vWorkflowControlCube, pWorkflow, 'Security Mode' );
 vLocking = CellGetS( vWorkflowControlCube, pWorkflow, 'Locking' );
 vControlDimension = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Dimension' );
 vControlHierarchy = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Hierarchy' );
@@ -31,7 +32,8 @@ WHILE ( vCube @<> '');
         vElementIndex = 1;        
         vDimensionElement = DIMNM( vApprovalDimension, vElementIndex );
         WHILE ( vDimensionElement @<> '' );
-            
+
+            IF(vSecurityMode @= 'Client');
             vContributorIndex = 1;
             vContributorUser = DIMNM( '}Clients', vContributorIndex );
             WHILE ( vContributorUser @<> '' );
@@ -41,7 +43,7 @@ WHILE ( vCube @<> '');
                 vContributorIndex = vContributorIndex + 1;
                 vContributorUser = DIMNM( '}Clients', vContributorIndex );
             END;
-
+            ENDIF;
             vOverlayMap = '';
             vCubeDimOrderIndex = 1;
             vCubeDimOrder = TABDIM(vCube, vCubeDimOrderIndex );

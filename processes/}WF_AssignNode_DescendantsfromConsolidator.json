@@ -1,0 +1,39 @@
+{
+	"@type":"Process",
+	"Name":"}WF_AssignNode_DescendantsfromConsolidator",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_AssignNode_DescendantsfromConsolidator.ti",
+	"UIData":"_ParameterConstraints=e30=\f",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"Nome do Workflow",
+			"Value":"0",
+			"Type":"String"
+		},
+		{
+			"Name":"pContributor",
+			"Prompt":"Grupo para associar como contribuidor",
+			"Value":"0",
+			"Type":"String"
+		},
+		{
+			"Name":"pReviewer",
+			"Prompt":"Grupo para associar como revisor",
+			"Value":"0",
+			"Type":"String"
+		},
+		{
+			"Name":"pConsolidator",
+			"Prompt":"Nome do Consolidador pertencente a dimensão de aprovação",
+			"Value":"0",
+			"Type":"String"
+		}
+	],
+	"Variables":[]
+}

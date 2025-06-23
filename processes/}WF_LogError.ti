@@ -4,11 +4,11 @@ vUser           = TM1User();
 
 
 vCurrentLine = NumberToString ( DIMSIZ( '}WF_Error_Lines' ) );
-CellPutS( pWorkflow, '}WF_Errors', vCurrentLine, 'Workflow' );
-CellPutS( pError, '}WF_Errors', vCurrentLine, 'Error' );
-CellPutS( pMessage, '}WF_Errors', vCurrentLine, 'Message' );
-CellPutS( vNow, '}WF_Errors', vCurrentLine, 'DateTime' );
-CellPutS( vUser, '}WF_Errors', vCurrentLine, 'User' );
+CellPutS( pWorkflow, '}WF_Errors', vUser, vCurrentLine, 'Workflow' );
+CellPutS( pError, '}WF_Errors', vUser, vCurrentLine, 'Error' );
+CellPutS( pMessage, '}WF_Errors', vUser, vCurrentLine, 'Message' );
+CellPutS( vNow, '}WF_Errors', vUser, vCurrentLine, 'DateTime' );
+CellPutS( vUser, '}WF_Errors', vUser, vCurrentLine, 'User' );
 
 vNextLine = NumberToString ( DIMSIZ( '}WF_Error_Lines' ) + 1);
 DimensionElementInsertDirect( '}WF_Error_Lines', '', vNextLine, 'N' );
