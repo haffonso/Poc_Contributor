@@ -47,10 +47,20 @@ ENDIF;
 
 
 IF(pState @= 'Approved' % pState @= 'Rejected' );
-IF(vState @= 'Open');  
+IF(vState @= 'Open' );  
     ExecuteProcess( '}WF_LogError',
       'pWorkflow', pWorkflow,
       'pMessage', 'Node "' | pNode | '" is in "Open" status, wait for the node to be submitted ',
+      'pError', 'Failed to open node' );
+       ProcessQuit;   
+ENDIF;    
+ENDIF;
+
+IF(pState @= 'Approved' % pState @= 'Rejected' );
+IF(vState @= 'Assigned' );  
+    ExecuteProcess( '}WF_LogError',
+      'pWorkflow', pWorkflow,
+      'pMessage', 'Node "' | pNode | '" is in "Assigned" status, wait for the node to be submitted ',
       'pError', 'Failed to open node' );
        ProcessQuit;   
 ENDIF;    

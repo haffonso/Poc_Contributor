@@ -171,18 +171,14 @@ CubeRuleAppend( vPicklistsPicklistCube, '[''Control Dimension''] = S:''subset:}D
 CubeRuleAppend( vPicklistsPicklistCube, '[''Security''] = S:''static:Cell:Element'';' );
 CubeRuleAppend( vPicklistsPicklistCube, '[''Security Mode''] = S:''static:Client:Group'';' );
 CubeRuleAppend( vPicklistsPicklistCube, '[''Locking''] = S:''static:Any:All'';' );
-#CubeRuleAppend( vPicklistsPicklistCube, '[''Locking''] = S:STET;' );
-
-#vRegra = '["Input Cube"] = S:"dimension:}Cubes";';
-#CubeRuleAppend( vPicklistsPicklistCube, '["Control Hierarchy"] = S:"dimension:}Hierarchies_" | DB( "}WF_Picklists", "Control Dimension", !}WF_PickValue );' );
-#CubeRuleAppend( vPicklistsPicklistCube, '["Control Hierarchy"] = S: STET;');
-#CubeRuleAppend( vPicklistsPicklistCube, '["Input Cube"] = S:"dimension:}Cubes";' );
-#CubeRuleAppend( vPicklistsPicklistCube, '["Input Cube View"] = S:"dimension:}Views_" | DB( "}WF_Picklists", "Input Cube", !}WF_PickValue );' );
-#CubeRuleAppend( vPicklistsPicklistCube, '["Approval Hierarchy"] = S:"dimension:}Hierarchies_" | DB( "}WF_Picklists", "Approval Dimension", !}WF_PickValue );' );
-#CubeRuleAppend( vPicklistsPicklistCube, '["Contributor Group"] = S:"subset:}Groups:WF";' );
-#CubeRuleAppend( vPicklistsPicklistCube, '["Reviewer Group"] = S: "subset:}Groups:WF";' );
-#CubeRuleAppend( vPicklistsPicklistCube, '["Approval Structure"] = S: "subset:" | DB( "}WF_Control", DB( "}WF_Picklists", "Workflow", !}WF_PickValue ), "Dimension" ) |  ":" | DB( "}WF_Control", DB( "}WF_Picklists", "Workflow", !}WF_PickValue ), "Subset" ) ;' );
-#CubeRuleAppend( vPicklistsPicklistCube, '["Workflow"] = S: "dimension:}WF";' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Input Cube''] = S:''dimension:}Cubes'';' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Input Cube View''] = S:''dimension:}Views_'' | DB( ''}WF_Picklists'', ''Input Cube'', !}WF_PickValue );' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Control Hierarchy''] = S:''dimension:}Hierarchies_'' | DB( ''}WF_Picklists'', ''Control Dimension'', !}WF_PickValue );' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Approval Hierarchy''] = S:''dimension:}Hierarchies_'' | DB( ''}WF_Picklists'', ''Approval Dimension'', !}WF_PickValue );' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Contributor Group''] = S:''subset:}Groups:WF'';' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Reviewer Group''] = S: ''subset:}Groups:WF'';' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Approval Structure''] = S: ''subset:'' | DB( ''}WF_Control'', DB( ''}WF_Picklists'', ''Workflow'', !}WF_PickValue ), ''Dimension'' ) |  '':'' | DB( ''}WF_Control'', DB( ''}WF_Picklists'', ''Workflow'', !}WF_PickValue ), ''Subset'' ) ;' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Workflow''] = S:''dimension:}WF'';' );
 
 
 vWorkflowGroup = '}Workflow';
