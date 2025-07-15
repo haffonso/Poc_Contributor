@@ -119,7 +119,7 @@ DimensionElementInsertDirect( vWorkflowComments, '', 'Workflow', 'S' );
 DimensionElementInsertDirect( vWorkflowComments, '', 'Node', 'S' );
 DimensionElementInsertDirect( vWorkflowComments, '', 'State', 'S' );
 DimensionElementInsertDirect( vWorkflowComments, '', 'Comment', 'S' );
-
+DimensionElementInsertDirect( vWorkflowComments, '', 'Context', 'S' );
 
 # Create picklist objects
 

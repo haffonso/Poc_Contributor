@@ -2,29 +2,393 @@
 vNow           = TIMST (NOW(), '\Y-\m-\d \h:\i:\s' );
 vUser           = TM1User();
 vCommentCube = '}WF_' | pWorkflow | '_Comments';
+vInputCube = CellGetS( '}WF_Control', pWorkflow, 'Input Cubes' );
+vApprovalDimension = CellGetS( '}WF_Control', pWorkflow, 'Dimension' );
+vCommentCubePAW = '}CellAnnotations_' | vInputCube ;
 vCurrentCommentLine = CellGetN( '}WF_Control', pWorkflow, 'Comment Index' );
 vCurrentCommentLineString = NumberToString( vCurrentCommentLine );
+vCountDim = CubeDimensionCountGet( vCommentCubePAW );
 
 
-CellPutS( pWorkflow, vCommentCube, vCurrentCommentLineString, 'Workflow' );
-CellPutS( pNode, vCommentCube, vCurrentCommentLineString, 'Node' );
-CellPutS( pState, vCommentCube, vCurrentCommentLineString, 'State' );
-CellPutS( pComment, vCommentCube, vCurrentCommentLineString, 'Comment' );
-CellPutS( vNow, vCommentCube, vCurrentCommentLineString, 'DateTime' );
-CellPutS( vUser, vCommentCube, vCurrentCommentLineString, 'User' );
+# Busca a dimensão de aprovação no cubo de input
+# ========================================
+vIndex = 0;
+WHILE(vIndex <= vCountDim);
+    vElm = TABDIM( vCommentCubePAW, vIndex );
+    LogOutput( 'INFO', vElm );
+    vIndex = vIndex + 1;
+    
+    IF(vElm @= vApprovalDimension);
+        LogOutput( 'INFO', vElm|'      '|vApprovalDimension );
+        vApprovalDimensionIndex = vIndex - 1;
+        vIndex = vCountDim + 1;        
+    ENDIF;
+END;
+
+#  Soma um para buscar setar a varialvel de valor
+# ========================================
+vCountDim = vCountDim + 1;
+
+
+
+# Variáveis de controle do processo
+# ========================================
+cCuboOrigem                 = vCommentCubePAW;
+cCuboParametro				= 'System Controle Cargas';
+cCuboPropriedade			= '}CubeProperties';
+cHorarioInicio				= Now();
+cProcesso					= GetProcessName();
+cMensagemRegistro		 	= '';
+cMensagemProcesso 			= '';
+cExisteRegistroRejeitado 	= 0;
+cExisteCabecalhoRejeitado	= 0;
+cQtdRegistroRejeitado		= 0;
+cTipoErro					= 0;
+cContadorRegistro 			= 0;
+
+
+# =================================================================================
+#
+# Definição View de Leitura do Cubo de Origem
+#
+# =================================================================================
+
+cSuprimirConsolidado	= 'N';
+cSuprimirZero		= 'S'; 
+cSuprimirCamposCalculados	= 'N';
+cViewTemporaria	 	= 'S';
+nViewTemporaria		= If( cViewTemporaria @= 'S', 1, 0);
+
+
+
+
+# Define nome da view e subset de origem
+# ======================================================
+cViewOrigem	= 'processo.' | cProcesso | '.' | 'Leitura' | '.' | TimSt( cHorarioInicio, '\Y-\m-\d \hh\im\ss' );
+cSubsetOrigem	= cViewOrigem;
+
+
+
+# Cria a view que será utilizada para a leitura
+# ======================================================
+ViewCreate( cCuboOrigem , cViewOrigem , nViewTemporaria );
+
+
+
+# Cria os subsets que serão utilizados para filtrar a view de leitura
+# ======================================================
+
+cDimensao	= '}AnnotationMeasures';
+cElemento	= 'Annotations';
+If( cDimensao @<> '');
+  SubsetCreate( cDimensao, cSubsetOrigem, nViewTemporaria );  
+  ViewSubsetAssign( cCuboOrigem , cViewOrigem, cDimensao , cSubsetOrigem );  
+  SubsetElementInsert( cDimensao, cSubsetOrigem, cElemento	, 1 );
+EndIf;
+
+
+# Configuração da View de Leitura
+# ======================================================
+ViewExtractSkipCalcsSet( cCuboOrigem, cViewOrigem, If( cSuprimirConsolidado @= 'S', 1, 0) );
+ViewExtractSkipZeroesSet( cCuboOrigem, cViewOrigem, If( cSuprimirZero @= 'S', 1, 0)  );
+ViewExtractSkipRuleValuesSet( cCuboOrigem, cViewOrigem, If( cSuprimirCamposCalculados @= 'S', 1, 0) );
+
+
+
+# Define Cubo de Origem como Datasource
+# ==================================
+DataSourceCubeView = cViewOrigem;
+
+
+# Limpa Cubo
+# ==================================
+CubeClearData( vCommentCube );
+
+
+#CellPutS( pWorkflow, vCommentCube, pNode, vCurrentCommentLineString, 'Workflow' );
+#CellPutS( pNode, vCommentCube, pNode, vCurrentCommentLineString, 'Node' );
+#CellPutS( pState, vCommentCube, pNode, vCurrentCommentLineString, 'State' );
+#CellPutS( pComment, vCommentCube, pNode, vCurrentCommentLineString, 'Comment' );
+#CellPutS( vNow, vCommentCube, pNode, vCurrentCommentLineString, 'DateTime' );
+#CellPutS( vUser, vCommentCube, pNode, vCurrentCommentLineString, 'User' );
+
+
+#endregion
+#region Metadata
+
+sLinha = '1';
+iMax = 1000;
+
+WHILE (StringToNumber(sLinha) <= iMax);
+   IF(DIMIX('}WF_Comment_Lines', sLinha) = 0);
+      DIMENSIONELEMENTINSERT('}WF_Comment_Lines', '', sLinha, 'N');
+   ENDIF;
+   sLinha = NumberToString(StringToNumber(sLinha) + 1);
+END;
+#endregion
+#region Data
+
+
+# Contador
+# ========================================
+
+
+# Define qual a variável contém os elementos da dimensão de aprovação
+# ========================================
+IF(vApprovalDimensionIndex = 1);
+    vApprovalDimensionElm = v1;
+ELSEIF(vApprovalDimensionIndex = 2);
+    vApprovalDimensionElm = v2;
+ELSEIF(vApprovalDimensionIndex = 3);
+    vApprovalDimensionElm = v3;
+ELSEIF(vApprovalDimensionIndex = 4);
+    vApprovalDimensionElm = v4;
+ELSEIF(vApprovalDimensionIndex = 5);
+    vApprovalDimensionElm = v5;
+ELSEIF(vApprovalDimensionIndex = 6);
+    vApprovalDimensionElm = v6;
+ELSEIF(vApprovalDimensionIndex = 7);
+    vApprovalDimensionElm = v7;
+ELSEIF(vApprovalDimensionIndex = 8);
+    vApprovalDimensionElm = v8;
+ELSEIF(vApprovalDimensionIndex = 9);
+    vApprovalDimensionElm = v9;
+ELSEIF(vApprovalDimensionIndex = 10);
+    vApprovalDimensionElm = v10;
+ELSEIF(vApprovalDimensionIndex = 11);
+    vApprovalDimensionElm = v11;
+ELSEIF(vApprovalDimensionIndex = 12);
+    vApprovalDimensionElm = v12;
+ELSEIF(vApprovalDimensionIndex = 13);
+    vApprovalDimensionElm = v13;
+ELSEIF(vApprovalDimensionIndex = 14);
+    vApprovalDimensionElm = v14;
+ELSEIF(vApprovalDimensionIndex = 15);
+    vApprovalDimensionElm = v15;
+ELSEIF(vApprovalDimensionIndex = 16);
+    vApprovalDimensionElm = v16;
+ELSEIF(vApprovalDimensionIndex = 17);
+    vApprovalDimensionElm = v17;
+ELSEIF(vApprovalDimensionIndex = 18);
+    vApprovalDimensionElm = v18;
+ELSEIF(vApprovalDimensionIndex = 19);
+    vApprovalDimensionElm = v19;
+ELSEIF(vApprovalDimensionIndex = 20);
+    vApprovalDimensionElm = v20;
+ELSEIF(vApprovalDimensionIndex = 21);
+    vApprovalDimensionElm = v21;
+ELSEIF(vApprovalDimensionIndex = 22);
+    vApprovalDimensionElm = v22;
+ELSEIF(vApprovalDimensionIndex = 23);
+    vApprovalDimensionElm = v23;
+ELSEIF(vApprovalDimensionIndex = 24);
+    vApprovalDimensionElm = v24;
+ELSEIF(vApprovalDimensionIndex = 25);
+    vApprovalDimensionElm = v25;
+ENDIF;
+
+# Define qual a variável contém os elementos da dimensão de metricas
+# ========================================
+IF(vCountDim = 1);
+    vMeasureDimensionElm = v1;
+ELSEIF(vCountDim = 2);
+    vMeasureDimensionElm = v2;
+ELSEIF(vCountDim = 3);
+    vMeasureDimensionElm = v3;
+ELSEIF(vCountDim = 4);
+    vMeasureDimensionElm = v4;
+ELSEIF(vCountDim = 5);
+    vMeasureDimensionElm = v5;
+ELSEIF(vCountDim = 6);
+    vMeasureDimensionElm = v6;
+ELSEIF(vCountDim = 7);
+    vMeasureDimensionElm = v7;
+ELSEIF(vCountDim = 8);
+    vMeasureDimensionElm = v8;
+ELSEIF(vCountDim = 9);
+    vMeasureDimensionElm = v9;
+ELSEIF(vCountDim = 10);
+    vMeasureDimensionElm = v10;
+ELSEIF(vCountDim = 11);
+    vMeasureDimensionElm = v11;
+ELSEIF(vCountDim = 12);
+    vMeasureDimensionElm = v12;
+ELSEIF(vCountDim = 13);
+    vMeasureDimensionElm = v13;
+ELSEIF(vCountDim = 14);
+    vMeasureDimensionElm = v14;
+ELSEIF(vCountDim = 15);
+    vMeasureDimensionElm = v15;
+ELSEIF(vCountDim = 16);
+    vMeasureDimensionElm = v16;
+ELSEIF(vCountDim = 17);
+    vMeasureDimensionElm = v17;
+ELSEIF(vCountDim = 18);
+    vMeasureDimensionElm = v18;
+ELSEIF(vCountDim = 19);
+    vMeasureDimensionElm = v19;
+ELSEIF(vCountDim = 20);
+    vMeasureDimensionElm = v20;
+ELSEIF(vCountDim = 21);
+    vMeasureDimensionElm = v21;
+ELSEIF(vCountDim = 22);
+    vMeasureDimensionElm = v22;
+ELSEIF(vCountDim = 23);
+    vMeasureDimensionElm = v23;
+ELSEIF(vCountDim = 24);
+    vMeasureDimensionElm = v24;
+ELSEIF(vCountDim = 25);
+    vMeasureDimensionElm = v25;
+ENDIF;
+
+
+               
+vTexto = vMeasureDimensionElm;
+ASCIIOutput('../leitura.txt',
+      vTexto);
+vBusca = 'caption';
+vBuscaUser = 'creator';
+vBuscaID = 'id';
+vTextoTam = LONG(vTexto);
+vIni = 1;
+vOrdem = 1;
+
+WHILE (vIni <= vTextoTam);
+
+   # Localiza "caption"
+   vPos = SCAN('caption', SUBST(vTexto, vIni, vTextoTam - vIni + 1));
+   IF (vPos = 0);
+      BREAK;
+   ENDIF;
+   vMatchCaption = vIni + vPos - 1;
+
+   # Aspas do valor de caption
+   vAspa1Rel = SCAN('"', SUBST(vTexto, vMatchCaption, vTextoTam - vMatchCaption + 1));
+   vAspa2Rel = SCAN('"', SUBST(vTexto, vMatchCaption + vAspa1Rel, vTextoTam - vMatchCaption - vAspa1Rel + 1));
+   vAspa3Rel = SCAN('"', SUBST(vTexto, vMatchCaption + vAspa1Rel + vAspa2Rel, vTextoTam));
+   vAspaIni = vMatchCaption + vAspa1Rel + vAspa2Rel - 1;
+   vAspaFim = vAspaIni + vAspa3Rel;
+   vComment = SUBST(vTexto, vAspaIni + 1, vAspaFim - vAspaIni - 1);
+
+   # Localiza "creator"
+   vPosCreator = SCAN('creator', SUBST(vTexto, vAspaFim, vTextoTam - vAspaFim + 1));
+   IF (vPosCreator = 0);
+      vIni = vAspaFim + 1;
+   ENDIF;
+   vMatchCreator = vAspaFim + vPosCreator - 1;
+
+   # Aspas do valor de creator
+   vAspa1UserRel = SCAN('"', SUBST(vTexto, vMatchCreator, vTextoTam - vMatchCreator + 1));
+   vAspa2UserRel = SCAN('"', SUBST(vTexto, vMatchCreator + vAspa1UserRel, vTextoTam));
+   vAspa3UserRel = SCAN('"', SUBST(vTexto, vMatchCreator + vAspa1UserRel + vAspa2UserRel, vTextoTam));
+   vAspaUserIni = vMatchCreator + vAspa1UserRel + vAspa2UserRel - 1;
+   vAspaUserFim = vAspaUserIni + vAspa3UserRel;
+   vUser = SUBST(vTexto, vAspaUserIni + 1, vAspaUserFim - vAspaUserIni - 1);
+
+   # Localiza "timeCreated"
+   vPosTime = SCAN('timeCreated', SUBST(vTexto, vAspaUserFim, vTextoTam - vAspaUserFim + 1));
+   IF (vPosTime > 0);
+      vMatchTime = vAspaUserFim + vPosTime - 1;
+      vAspa1TimeRel = SCAN('"', SUBST(vTexto, vMatchTime, vTextoTam - vMatchTime + 1));
+      vAspa2TimeRel = SCAN('"', SUBST(vTexto, vMatchTime + vAspa1TimeRel, vTextoTam));
+      vAspa3TimeRel = SCAN('"', SUBST(vTexto, vMatchTime + vAspa1TimeRel + vAspa2TimeRel, vTextoTam));
+      vAspaTimeIni = vMatchTime + vAspa1TimeRel + vAspa2TimeRel - 1;
+      vAspaTimeFim = vAspaTimeIni + vAspa3TimeRel;
+      vTimeCreated = SUBST(vTexto, vAspaTimeIni + 1, vAspaTimeFim - vAspaTimeIni - 1);
+   ELSE;
+      vTimeCreated = '';
+   ENDIF;
+
+
+    # Localiza "commentLocation"
+    vPosLoc = SCAN('commentLocation', SUBST(vTexto, vAspaUserFim, vTextoTam - vAspaUserFim + 1));
+    IF (vPosLoc > 0);
+       vMatchLoc = vAspaUserFim + vPosLoc - 1;
+    
+       vAspa1LocRel = SCAN('"', SUBST(vTexto, vMatchLoc, vTextoTam - vMatchLoc + 1));
+       vAspa2LocRel = SCAN('"', SUBST(vTexto, vMatchLoc + vAspa1LocRel, vTextoTam));
+       vAspa3LocRel = SCAN('"', SUBST(vTexto, vMatchLoc + vAspa1LocRel + vAspa2LocRel, vTextoTam));
+    
+       vAspaLocIni = vMatchLoc + vAspa1LocRel + vAspa2LocRel - 1;
+       vAspaLocFim = vAspaLocIni + vAspa3LocRel;
+    
+       vCommentLocation = SUBST(vTexto, vAspaLocIni + 1, vAspaLocFim - vAspaLocIni - 1);
+    ELSE;
+       vCommentLocation = '';
+    ENDIF;
+    
+
+   # Formata a data para dd/mm/yyyy hh:mm:ss
+   IF (LONG(vTimeCreated) = 14);
+      vAno  = SUBST(vTimeCreated, 1, 4);
+      vMes  = SUBST(vTimeCreated, 5, 2);
+      vDia  = SUBST(vTimeCreated, 7, 2);
+      vHora = SUBST(vTimeCreated, 9, 2);
+      vMin  = SUBST(vTimeCreated, 11, 2);
+      vSeg  = SUBST(vTimeCreated, 13, 2);
+      vDataFormatada = vAno | '-' | vMes | '-' | vDia | ' ' | vHora | ':' | vMin | ':' | vSeg;
+   ELSE;
+      vDataFormatada = '';
+   ENDIF;
+
+   # Exporta para arquivo
+   ASCIIOutput('../comment.txt',
+      'Ordem', NumberToString(vOrdem),
+      'Comment', vComment,
+      'User', vUser,
+      'TimeCreated', vDataFormatada,
+      'Location', vCommentLocation,
+      'Elm', vApprovalDimensionElm);
+
+    # Busca próxima linha livre para o centro de custo atual
+    # define um limite razoável
+    vMaxLinhas = 1000; 
+    vLinhaLivre = '';
+    i = 1;
+    
+    WHILE (i <= vMaxLinhas);
+        vLinha = NumberToString(i);
+        
+        # Verifica se já existe um comentário nesta linha para o centro de custo atual
+        vExistente = CellGetS(vCommentCube, vApprovalDimensionElm, vLinha, 'Comment');
+        
+        IF (vExistente @= '');
+            vLinhaLivre = vLinha;
+            BREAK;
+        ENDIF;
+    
+        i = i + 1;
+    END;
+
+   # Grava no cubo de comentários
+    CellPutS(vApprovalDimensionElm, vCommentCube, vApprovalDimensionElm, vLinhaLivre, 'Node');
+    CellPutS(vComment, vCommentCube, vApprovalDimensionElm,  vLinhaLivre,'Comment');
+    CellPutS(vDataFormatada, vCommentCube, vApprovalDimensionElm, vLinhaLivre,  'DateTime');
+    CellPutS(vUser, vCommentCube, vApprovalDimensionElm, vLinhaLivre, 'User');
+    CellPutS(pWorkflow, vCommentCube, vApprovalDimensionElm,  vLinhaLivre,  'Workflow');
+    CellPutS(vCommentLocation, vCommentCube, vApprovalDimensionElm,  vLinhaLivre,  'Context');
+
+   # Próxima ocorrência
+   vOrdem = vOrdem + 1;
+   vIni = vAspaUserFim + 1;
+
+END;
+
+
 
 
 #endregion
 #region Epilog
 
-vNextCommentLine = vCurrentCommentLine + 1;
-vNextCommentLineString = NumberToString( vNextCommentLine );
 
-IF ( DimensionElementExists( '}WF_Comment_Lines', vNextCommentLineString ) = 0);
-    DimensionElementInsertDirect( '}WF_Comment_Lines', '', vNextCommentLineString, 'N' );
-ENDIF;
-
-CellPutN( vNextCommentLine, '}WF_Control', pWorkflow, 'Comment Index' );
+#vNextCommentLine = vCurrentCommentLine + 1;
+#vNextCommentLineString = NumberToString( vNextCommentLine );
+#
+#IF ( DimensionElementExists( '}WF_Comment_Lines', vNextCommentLineString ) = 0);
+#    DimensionElementInsertDirect( '}WF_Comment_Lines', '', vNextCommentLineString, 'N' );
+#ENDIF;
+#
+#CellPutN( vNextCommentLine, '}WF_Control', pWorkflow, 'Comment Index' );
 
 
 #endregion

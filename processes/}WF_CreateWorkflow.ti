@@ -335,7 +335,7 @@ END;
 IF ( CubeExists( vWorkflowCommentCubeName ) = 1);
     CubeDestroy( vWorkflowCommentCubeName );
 ENDIF;
-CubeCreate( vWorkflowCommentCubeName, vWorkflowCommentLines, vWorkflowComments );
+CubeCreate( vWorkflowCommentCubeName, pDimension, vWorkflowCommentLines, vWorkflowComments );
 
 #endregion
 #region Epilog

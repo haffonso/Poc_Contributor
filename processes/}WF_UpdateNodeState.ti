@@ -134,7 +134,7 @@ IF ( vElementChildCount > 0);
 ENDIF;
 
 ExecuteProcess( '}WF_LockUnlockNode', 'pWorkflow', pWorkflow, 'pNode', pNode, 'pLock', pLock  );
-ExecuteProcess( '}WF_AddComment', 'pWorkflow', pWorkflow, 'PNode', pNode, 'pState', pState, 'pComment', pComments );
+#ExecuteProcess( '}WF_AddComment', 'pWorkflow', pWorkflow, 'PNode', pNode, 'pState', pState, 'pComment', pComments );
 
 
 #endregion
