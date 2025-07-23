@@ -1,8 +1,11 @@
 #region Prolog
+
 vNow           = TIMST (NOW(), '\Y-\m-\d \h:\i:\s' );
 vUser           = TM1User();
 vCommentCube = '}WF_' | pWorkflow | '_Comments';
+cCuboDestino = vCommentCube;
 vInputCube = CellGetS( '}WF_Control', pWorkflow, 'Input Cubes' );
+vInputCube = pInputCube;
 vApprovalDimension = CellGetS( '}WF_Control', pWorkflow, 'Dimension' );
 vCommentCubePAW = '}CellAnnotations_' | vInputCube ;
 vCurrentCommentLine = CellGetN( '}WF_Control', pWorkflow, 'Comment Index' );
@@ -97,21 +100,60 @@ ViewExtractSkipRuleValuesSet( cCuboOrigem, cViewOrigem, If( cSuprimirCamposCalcu
 
 # Define Cubo de Origem como Datasource
 # ==================================
+DatasourceNameForServer = vCommentCubePAW;
 DataSourceCubeView = cViewOrigem;
 
 
-# Limpa Cubo
+# =================================================================================
+#
+# Definição View de Leitura do Cubo de Destino
+#
+# =================================================================================
+
+cSuprimirConsolidado	= 'N';
+cSuprimirZero		= 'S'; 
+cSuprimirCamposCalculados	= 'N';
+cViewTemporaria	 	= 'S';
+nViewTemporaria		= If( cViewTemporaria @= 'S', 1, 0);
+
+
+
+
+# Define nome da view e subset de Destino
+# ======================================================
+cViewDestino	= 'processo.' | cProcesso | '.' | 'Leitura' | '.' | TimSt( cHorarioInicio, '\Y-\m-\d \hh\im\ss' );
+cSubsetDestino	= cViewDestino;
+
+
+
+# Cria a view que será utilizada para a leitura
+# ======================================================
+ViewCreate( cCuboDestino , cViewDestino , nViewTemporaria );
+
+
+
+# Cria os subsets que serão utilizados para filtrar a view de leitura
+# ======================================================
+
+cDimensao	= '}Cubes';
+cElemento	= pInputCube;
+If( cDimensao @<> '');
+  SubsetCreate( cDimensao, cSubsetDestino, nViewTemporaria );  
+  ViewSubsetAssign( cCuboDestino , cViewDestino, cDimensao , cSubsetDestino );  
+  SubsetElementInsert( cDimensao, cSubsetDestino, cElemento	, 1 );
+EndIf;
+
+
+# Configuração da View de Leitura
+# ======================================================
+ViewExtractSkipCalcsSet( cCuboDestino, cViewDestino, If( cSuprimirConsolidado @= 'S', 1, 0) );
+ViewExtractSkipZeroesSet( cCuboDestino, cViewDestino, If( cSuprimirZero @= 'S', 1, 0)  );
+ViewExtractSkipRuleValuesSet( cCuboDestino, cViewDestino, If( cSuprimirCamposCalculados @= 'S', 1, 0) );
+
+
+# Limpa view no cubo Destino
 # ==================================
-CubeClearData( vCommentCube );
-
-
-#CellPutS( pWorkflow, vCommentCube, pNode, vCurrentCommentLineString, 'Workflow' );
-#CellPutS( pNode, vCommentCube, pNode, vCurrentCommentLineString, 'Node' );
-#CellPutS( pState, vCommentCube, pNode, vCurrentCommentLineString, 'State' );
-#CellPutS( pComment, vCommentCube, pNode, vCurrentCommentLineString, 'Comment' );
-#CellPutS( vNow, vCommentCube, pNode, vCurrentCommentLineString, 'DateTime' );
-#CellPutS( vUser, vCommentCube, pNode, vCurrentCommentLineString, 'User' );
-
+ViewZeroOut(cCuboDestino, cViewDestino);
 
 #endregion
 #region Metadata
@@ -350,7 +392,7 @@ WHILE (vIni <= vTextoTam);
         vLinha = NumberToString(i);
         
         # Verifica se já existe um comentário nesta linha para o centro de custo atual
-        vExistente = CellGetS(vCommentCube, vApprovalDimensionElm, vLinha, 'Comment');
+        vExistente = CellGetS(vCommentCube, pInputCube, vApprovalDimensionElm, vLinha, 'Comment');
         
         IF (vExistente @= '');
             vLinhaLivre = vLinha;
@@ -361,12 +403,12 @@ WHILE (vIni <= vTextoTam);
     END;
 
    # Grava no cubo de comentários
-    CellPutS(vApprovalDimensionElm, vCommentCube, vApprovalDimensionElm, vLinhaLivre, 'Node');
-    CellPutS(vComment, vCommentCube, vApprovalDimensionElm,  vLinhaLivre,'Comment');
-    CellPutS(vDataFormatada, vCommentCube, vApprovalDimensionElm, vLinhaLivre,  'DateTime');
-    CellPutS(vUser, vCommentCube, vApprovalDimensionElm, vLinhaLivre, 'User');
-    CellPutS(pWorkflow, vCommentCube, vApprovalDimensionElm,  vLinhaLivre,  'Workflow');
-    CellPutS(vCommentLocation, vCommentCube, vApprovalDimensionElm,  vLinhaLivre,  'Context');
+    CellPutS(vApprovalDimensionElm, vCommentCube, pInputCube, vApprovalDimensionElm, vLinhaLivre, 'Node');
+    CellPutS(vComment, vCommentCube, pInputCube, vApprovalDimensionElm,  vLinhaLivre,'Comment');
+    CellPutS(vDataFormatada, vCommentCube, pInputCube,  vApprovalDimensionElm, vLinhaLivre,  'DateTime');
+    CellPutS(vUser, vCommentCube, pInputCube,  vApprovalDimensionElm, vLinhaLivre, 'User');
+    CellPutS(pWorkflow, vCommentCube, pInputCube,  vApprovalDimensionElm,  vLinhaLivre,  'Workflow');
+    CellPutS(vCommentLocation, vCommentCube, pInputCube, vApprovalDimensionElm,  vLinhaLivre,  'Context');
 
    # Próxima ocorrência
    vOrdem = vOrdem + 1;

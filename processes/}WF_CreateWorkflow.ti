@@ -10,11 +10,57 @@ vWorkflowComments = '}WF_Comments';
 vWorkflowCommentLines = '}WF_Comment_Lines';
 vWorkflowCommentCubeName = '}WF_' | pWorkflow | '_Comments';
 
+sCube1 = CellGetS('}WF_Picklists', 'Input Cube', 'value');
+sCube2 = CellGetS('}WF_Picklists', 'Input Cube 2', 'value');
+sCube3 = CellGetS('}WF_Picklists', 'Input Cube 3', 'value');
+sCube4 = CellGetS('}WF_Picklists', 'Input Cube 4', 'value');
+sCube5 = CellGetS('}WF_Picklists', 'Input Cube 5', 'value');
+
+pCubes = '';
+
+IF( LONG( TRIM(sCube1) ) > 0 );
+  pCubes = sCube1;
+ENDIF;
+
+IF( LONG( TRIM(sCube2) ) > 0 );
+  IF( pCubes @<> '' );
+    pCubes = pCubes | ',' | sCube2;
+  ELSE;
+    pCubes = sCube2;
+  ENDIF;
+ENDIF;
+
+IF( LONG( TRIM(sCube3) ) > 0 );
+  IF( pCubes @<> '' );
+    pCubes = pCubes | ',' | sCube3;
+  ELSE;
+    pCubes = sCube3;
+  ENDIF;
+ENDIF;
+
+IF( LONG( TRIM(sCube4) ) > 0 );
+  IF( pCubes @<> '' );
+    pCubes = pCubes | ',' | sCube4;
+  ELSE;
+    pCubes = sCube4;
+  ENDIF;
+ENDIF;
+
+IF( LONG( TRIM(sCube5) ) > 0 );
+  IF( pCubes @<> '' );
+    pCubes = pCubes | ',' | sCube5;
+  ELSE;
+    pCubes = sCube5;
+  ENDIF;
+ENDIF;
+
+LogOutput('INFO',pCubes);
+
 pDebug = 'Y';
 pDimension = CellGetS( '}WF_Picklists', 'Approval Dimension','value');
 pHierarchy = CellGetS( '}WF_Picklists', 'Approval Hierarchy','value');
 pSubset = CellGetS( '}WF_Picklists', 'Approval Subset','value');
-pCubes = CellGetS( '}WF_Picklists', 'Input Cube','value');
+#pCubes = CellGetS( '}WF_Picklists', 'Input Cube','value');
 pSecurity = CellGetS( '}WF_Picklists', 'Security','value');
 pSecurityMode = CellGetS( '}WF_Picklists', 'Security Mode','value');
 pLocking = CellGetS( '}WF_Picklists', 'Locking','value');
@@ -335,10 +381,48 @@ END;
 IF ( CubeExists( vWorkflowCommentCubeName ) = 1);
     CubeDestroy( vWorkflowCommentCubeName );
 ENDIF;
-CubeCreate( vWorkflowCommentCubeName, pDimension, vWorkflowCommentLines, vWorkflowComments );
+CubeCreate( vWorkflowCommentCubeName, '}Cubes', pDimension, vWorkflowCommentLines, vWorkflowComments );
 
 #endregion
 #region Epilog
+
+# Atribui a segurança de leitura nos cubos de controle a todos os grupos do modelo
+vGrupo = '';
+vCubo = '';
+vDim = '';
+nGrupo = 1;
+nCubo = 1;
+
+WHILE ( nGrupo <= DimSiz('}Groups') );
+    vGrupo = DIMNM('}Groups', nGrupo);
+
+    # Excluir grupos técnicos e específicos
+    IF (
+        SUBST(vGrupo, 1, 1) @<> '}'
+        # E não seja um dos grupos administrativos
+        & vGrupo @<> 'ADMIN'
+        & vGrupo @<> 'SecurityAdmin'
+        & vGrupo @<> 'DataAdmin'
+        & vGrupo @<> 'OperationsAdmin'        
+    );
+
+        nCubo = 1;
+        WHILE ( nCubo <= DimSiz('}Cubes') );
+            vCubo = DIMNM('}Cubes', nCubo);
+            IF ( SUBST(vCubo, 1, 3) @= '}WF' );
+                CellPutS('READ', '}CubeSecurity', vCubo, vGrupo);
+                i = 1;
+                WHILE ( i <= CubeDimensionCountGet(vCubo) );
+                    vDim = TABDIM(vCubo, i);
+                    CellPutS('READ', '}DimensionSecurity', vDim, vGrupo);
+                    i = i + 1;
+                END;
+            ENDIF;
+            nCubo = nCubo + 1;
+        END;
+    ENDIF;
+    nGrupo = nGrupo + 1;
+END;
 
 CubeClearData( '}WF_Picklists' );
 

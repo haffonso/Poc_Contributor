@@ -35,8 +35,8 @@
 	"DataSource":
 	{
 		"Type":"TM1CubeView",
-		"dataSourceNameForClient":"}CellAnnotations_FCO.010.Input Fixed Cost",
-		"dataSourceNameForServer":"}CellAnnotations_FCO.010.Input Fixed Cost",
+		"dataSourceNameForClient":"}Capabilities",
+		"dataSourceNameForServer":"}Capabilities",
 		"view":"Default"
 	},
 	"Parameters":
@@ -61,6 +61,12 @@
 		},
 		{
 			"Name":"pComment",
+			"Prompt":"",
+			"Value":"0",
+			"Type":"String"
+		},
+		{
+			"Name":"pInputCube",
 			"Prompt":"",
 			"Value":"0",
 			"Type":"String"

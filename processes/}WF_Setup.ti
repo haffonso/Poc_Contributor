@@ -43,7 +43,11 @@ DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Name', 'S' );
 DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Owner', 'S' );
 DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Created', 'S' );
 DimensionElementInsertDirect( vWorkflowControlDimension, '', 'State Cube', 'S' );
-DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Input Cubes', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Input Cube', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Input Cube 2', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Input Cube 3', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Input Cube 4', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Input Cube 5', 'S' );
 DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Dimension', 'S' );
 DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Hierarchy', 'S' );
 DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Subset', 'S' );
@@ -136,20 +140,26 @@ ENDIF;
 DimensionCreate( vPicklistDimension );
 
 DimensionElementInsertDirect( vPicklistDimension, '', 'Approval Dimension', 'S' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Approval Hierarchy', 'S' );
 DimensionElementInsertDirect( vPicklistDimension, '', 'Approval Subset', 'S' );
 DimensionElementInsertDirect( vPicklistDimension, '', 'Control Dimension', 'S' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Control Hierarchy', 'S' );
 DimensionElementInsertDirect( vPicklistDimension, '', 'Control Member', 'S' );
 DimensionElementInsertDirect( vPicklistDimension, '', 'Security', 'S' );
 DimensionElementInsertDirect( vPicklistDimension, '', 'Security Mode', 'S' );
 DimensionElementInsertDirect( vPicklistDimension, '', 'Locking', 'S' );
 DimensionElementInsertDirect( vPicklistDimension, '', 'Input Cube', 'S' );
 DimensionElementInsertDirect( vPicklistDimension, '', 'Input Cube View', 'S' );
-DimensionElementInsertDirect( vPicklistDimension, '', 'Approval Hierarchy', 'S' );
-DimensionElementInsertDirect( vPicklistDimension, '', 'Control Hierarchy', 'S' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Input Cube 2', 'S' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Input Cube 3', 'S' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Input Cube 4', 'S' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Input Cube 5', 'S' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Workflow', 'S' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Approval Structure', 'S' );
 DimensionElementInsertDirect( vPicklistDimension, '', 'Contributor Group', 'S' );
 DimensionElementInsertDirect( vPicklistDimension, '', 'Reviewer Group', 'S' );
-DimensionElementInsertDirect( vPicklistDimension, '', 'Approval Structure', 'S' );
-DimensionElementInsertDirect( vPicklistDimension, '', 'Workflow', 'S' );
+
+
 
 
 vPicklistValueDimension = '}WF_PickValue';
@@ -172,6 +182,10 @@ CubeRuleAppend( vPicklistsPicklistCube, '[''Security''] = S:''static:Cell:Elemen
 CubeRuleAppend( vPicklistsPicklistCube, '[''Security Mode''] = S:''static:Client:Group'';' );
 CubeRuleAppend( vPicklistsPicklistCube, '[''Locking''] = S:''static:Any:All'';' );
 CubeRuleAppend( vPicklistsPicklistCube, '[''Input Cube''] = S:''dimension:}Cubes'';' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Input Cube 2''] = S:''dimension:}Cubes'';' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Input Cube 3''] = S:''dimension:}Cubes'';' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Input Cube 4''] = S:''dimension:}Cubes'';' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Input Cube 5''] = S:''dimension:}Cubes'';' );
 CubeRuleAppend( vPicklistsPicklistCube, '[''Input Cube View''] = S:''dimension:}Views_'' | DB( ''}WF_Picklists'', ''Input Cube'', !}WF_PickValue );' );
 CubeRuleAppend( vPicklistsPicklistCube, '[''Control Hierarchy''] = S:''dimension:}Hierarchies_'' | DB( ''}WF_Picklists'', ''Control Dimension'', !}WF_PickValue );' );
 CubeRuleAppend( vPicklistsPicklistCube, '[''Approval Hierarchy''] = S:''dimension:}Hierarchies_'' | DB( ''}WF_Picklists'', ''Approval Dimension'', !}WF_PickValue );' );
